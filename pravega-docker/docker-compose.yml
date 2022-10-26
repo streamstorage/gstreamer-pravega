@@ -22,7 +22,7 @@
 version: '3'
 services:
   zookeeper:
-    image: zookeeper:3.6.1
+    image: pravega/zookeeper
     networks:
       pravega_net:
         ipv4_address: 172.28.1.11
@@ -38,7 +38,9 @@ services:
       BK_majorCompactionInterval: 3600
       BK_journalMaxSizeMB: 100
       BK_journalMaxBackups: 1
-    image: pravega/bookkeeper:0.9.0
+      BOOKIE_EXTRA_OPTS: |
+        -Xmx1g
+    image: pravega/bookkeeper
     links:
       - zookeeper
     networks:
@@ -62,7 +64,6 @@ services:
         -XX:+ExitOnOutOfMemoryError
         -XX:+CrashOnOutOfMemoryError
         -XX:+HeapDumpOnOutOfMemoryError
-      SERVICE_HOST_IP: segmentstore
     image: pravega/pravega:latest
     links:
       - zookeeper
@@ -80,7 +81,7 @@ services:
       - "12345:12345"
     command: segmentstore
     environment:
-      WAIT_FOR: bookie1:3181
+      WAIT_FOR: bookie1:3181, zookeeper:2181
       TIER2_STORAGE: "FILESYSTEM"
       ZK_URL: zookeeper:2181
       CONTROLLER_URL: tcp://${HOST_IP}:9090
@@ -90,7 +91,9 @@ services:
         -Dbookkeeper.ensemble.size=1
         -Dbookkeeper.ack.quorum.size=1
         -Dbookkeeper.write.quorum.size=1
-        -Xmx4000m
+        -Dpravegaservice.cache.size.max=3221225472
+        -Xmx4g
+        -XX:MaxDirectMemorySize=4G
         -XX:OnError="kill -9 p%"
         -XX:+ExitOnOutOfMemoryError
         -XX:+CrashOnOutOfMemoryError
@@ -112,4 +115,4 @@ networks:
     ipam:
       driver: default
       config:
-        - subnet: 172.28.0.0/16
+        - subnet: 172.28.1.0/24

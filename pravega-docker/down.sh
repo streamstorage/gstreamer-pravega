@@ -13,4 +13,4 @@
 set -ex
 ROOT_DIR=$(readlink -f $(dirname $0))
 cd ${ROOT_DIR}
-docker-compose down
+docker compose down

@@ -72,7 +72,7 @@ fn main() {
 }
 
 fn ensure_extra_files(resource_dir: String) {
-    for file in ["static/gap-5s.mp4", "static/hls-js.js", "templates/player.html"] {
+    for file in ["static/gap-5s.mp4", "static/hls-js.js", "static/player.css", "templates/player.html"] {
         let path = format!("{}/{}", resource_dir, file);
         if ! Path::new(&path).exists() {
             error!("Missing file to run pravega-video-server: {}", file);
