@@ -19,23 +19,21 @@ export GST_PLUGIN_PATH=${ROOT_DIR}/target/debug:${GST_PLUGIN_PATH}
 # log level can be INFO, DEBUG, or LOG (verbose)
 export GST_DEBUG=pravegasink:DEBUG,basesink:INFO
 export RUST_BACKTRACE=1
-export TZ=UTC
 PRAVEGA_STREAM=${PRAVEGA_STREAM:-hls1}
 PRAVEGA_CONTROLLER=${PRAVEGA_CONTROLLER:-127.0.0.1:9090}
-SIZE_SEC=604800
-FPS=30
+VIDEO_FILE=${VIDEO_FILE:-/file/path/name.mp4}
+FPS=25
 KEY_FRAME_INTERVAL=$((1*$FPS))
 
 gst-launch-1.0 \
 -v \
-videotestsrc name=src is-live=true do-timestamp=true num-buffers=$(($SIZE_SEC*$FPS)) \
-! "video/x-raw,format=YUY2,width=640,height=480,framerate=${FPS}/1" \
-! videoconvert \
-! clockoverlay "font-desc=Sans 48px" "time-format=%F %T" shaded-background=true \
-! timeoverlay valignment=bottom "font-desc=Sans 48px" shaded-background=true \
+filesrc location=${VIDEO_FILE} \
+! qtdemux \
+! h264parse \
+! avdec_h264 \
 ! videoconvert \
 ! queue \
-! x264enc key-int-max=${KEY_FRAME_INTERVAL} tune=zerolatency speed-preset=medium bitrate=500 \
+! x264enc key-int-max=${KEY_FRAME_INTERVAL} tune=zerolatency speed-preset=medium \
 ! queue \
 ! mpegtsmux alignment=-1 \
-! pravegasink stream=examples/${PRAVEGA_STREAM} controller=${PRAVEGA_CONTROLLER} seal=false sync=false timestamp-mode=realtime-clock
+! pravegasink stream=bilibili/${PRAVEGA_STREAM} controller=${PRAVEGA_CONTROLLER} seal=false sync=false timestamp-mode=realtime-clock
