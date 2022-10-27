@@ -11,26 +11,23 @@ You may obtain a copy of the License at
 -->
 
 <html>
-    <head>
-        <title>Pravega Video Player</title>
-        <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-        <link rel="stylesheet" href="static/player.css">
-    </head>
-    <body>
-        <div id="player" style="width: 100%; height: 100%;">
-            <div class="html5-video-player" tabindex="1">
-                <div class="html5-video-container">
-                    <video class="html5-main-video" id="video" controls muted autoplay loop></video>
-                </div>
-            </div>
-            <div class="html5-video-title">
-                <div class="html5-video-stream">
-                    <span id="scope">{{scope}}</span>/<span id="stream">{{stream}}</span>
-                    <span style="margin-left: 20px;margin-right:10px;" id="begin">{{begin}}</span> to <span style="margin-left: 10px;" id="end">{{end}}</span>
-                </div>
-                <div id="timestamp"></div>
-            </div>
-        </div>
-    </body>
-    <script src="static/hls-js.js"></script>
+
+<head>
+    <title>Pravega Video Player</title>
+    <meta charset="UTF-8" />
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <link rel="stylesheet" href="static/player.css">
+</head>
+
+<body>
+    <div class="artplayer-app"></div>
+    <div id="scope" class="{{scope}}"></div>
+    <div id="stream" class="{{stream}}"></div>
+    <div id="begin" class="{{begin}}"></div>
+    <div id="end" class="{{end}}"></div>
+    <script src="static/artplayer.js"></script>
+    <script src="static/artplayer-plugin-danmuku.js"></script>
+    <script src="static/player.js"></script>
+</body>
+
 </html>

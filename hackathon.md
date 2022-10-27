@@ -22,3 +22,8 @@ http://10.247.97.51:3030/player?scope=examples&stream=hls1&begin=2022-10-26T07:1
 http://10.247.97.51:3030/player?scope=bilibili&stream=BV1hV4y157XN&begin=2022-10-26T10:34:15Z&end=2022-10-26T10:39:05Z
 
 https://www.youtube.com/embed/A-UV7Z13uAQ
+
+
+USE_NEW_NVSTREAMMUX=yes  gst-launch-1.0 uridecodebin3 uri=$input1 name=demux1 ! queue ! nvvideoconvert ! "video/x-raw(memory:NVMM)" ! mux1.sink_0 nvstreammux batch-size=1 sync-inputs=1 max-latency=250000000 name=mux1 ! queue ! nvmultistreamtiler ! nvvideoconvert ! "video/x-raw(memory:NVMM)" ! nvv4l2h264enc ! h264parse ! queue ! flvmux name=mux streamable=true ! filesink location=out.flv  async=0 qos=0 sync=1 demux1. ! queue ! audioconvert ! audiomux.sink_0 nvstreammux name=audiomux batch-size=1 max-latency=250000000 sync-inputs=1 ! nvstreamdemux name=audiodemux audiodemux.src_0  ! audioconvert ! mixer.sink_0 audiomixer latency=250000000 name=mixer ! queue ! avenc_aac ! aacparse ! queue ! mux. fakesrc num-buffers=0 is-live=1 ! mixer. -e
+
+http://127.0.0.1:3030/player?scope=bilibili&stream=2&begin=2022-10-26T10:09:07Z&end=2022-10-26T10:13:57Z
