@@ -19,7 +19,8 @@ def parse_xml(xmlfile, video_id):
         p = parse_p(item.attrib['p'])
         assert len(p) == 9, f"{p} length not equals to 9, got: {len(p)}"
 
-     
+        # Danmu format
+        #   https://github.com/SocialSisterYi/bilibili-API-collect/blob/master/danmaku/danmaku_xml.md
         # video_id integer NOT NULL,
         # stime real NOT NULL,
         # mode integer NOT NULL,

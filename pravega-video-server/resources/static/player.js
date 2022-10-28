@@ -14,7 +14,9 @@ function load_video() {
     }
 
     var manifestUri = "/scopes/" + scope + "/streams/" + stream + "/m3u8" + query;
+    var danmuUri = "/scopes/" + scope + "/streams/" + stream + "/danmu" + query;
     console.log(manifestUri);
+    console.log(danmuUri);
     
     var art = new Artplayer({
         container: '.artplayer-app',
@@ -41,7 +43,7 @@ function load_video() {
         },
         plugins: [
             artplayerPluginDanmuku({
-                danmuku: '/static/BV1hV4y157XN.xml',
+                danmuku: danmuUri,
                 //mount: document.querySelector('.noshow')
             }),
         ],

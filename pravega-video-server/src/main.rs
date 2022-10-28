@@ -31,6 +31,9 @@ struct Opts {
     /// Directory containing static files and templates.
     #[clap(long, env = "PRAVEGA_VIDEO_SERVER_RESOURCE_DIR", default_value = "./resources")]
     resource_dir: String,
+    /// Postgres DB url in format "username:password@localhost/diesel_demo"
+    #[clap(long, env = "POSTGRES_URI", default_value = "username:password@localhost/diesel_demo")]
+    postgres_url: String,
 }
 
 fn main() {
@@ -53,10 +56,12 @@ fn main() {
     let config = utils::create_client_config(opts.pravega_controller_uri, Some(opts.keycloak_service_account_file)).expect("creating config");
     let client_factory = ClientFactoryAsync::new(config, runtime.handle().to_owned());
     let client_factory_db = client_factory.clone();
+    let database_url = opts.postgres_url.clone();
 
     runtime.block_on(async {
         let db = models::new(client_factory_db);
-        let api = filters::get_all_filters(db);
+        let postgres = models::new_postgres(database_url);
+        let api = filters::get_all_filters(db, postgres);
         let ui = ui::get_all_filters();
         let static_dir = warp::path("static").and(warp::fs::dir(static_dir_name));
         // let redirect = warp::path::end().map(|| {
@@ -83,16 +88,18 @@ fn ensure_extra_files(resource_dir: String) {
 
 mod filters {
     use super::handlers;
-    use super::models::{Db, GetMediaSegmentOptions, GetM3u8PlaylistOptions};
+    use super::models::{Postgres, Db, GetMediaSegmentOptions, GetM3u8PlaylistOptions};
     use warp::Filter;
 
     pub fn get_all_filters(
         db: Db,
+        postgres: Postgres,
     ) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
         get_media_segment(db.clone())
             .or(get_m3u8_playlist(db.clone()))
             .or(list_video_streams(db.clone()))
             .or(list_scopes(db.clone()))
+            .or(get_danmu_file(postgres.clone()))
     }
 
     /// GET /scopes/my_scope/streams/my_stream/media?begin=0&end=204
@@ -144,6 +151,21 @@ mod filters {
     fn with_db(db: Db) -> impl Filter<Extract = (Db,), Error = std::convert::Infallible> + Clone {
         warp::any().map(move || db.clone())
     }
+
+    /// GET /scopes/my_scope/streams/my_stream/danmu?begin=0&end=204
+    /// Returns the danmu in bilibili xml format for the video clip.
+    pub fn get_danmu_file(
+        postgres: Postgres,
+    ) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
+        warp::path!("scopes" / String / "streams" / String / "danmu" )
+            .and(warp::get())
+            .and(warp::query::<GetM3u8PlaylistOptions>())
+            .and(with_postgres(postgres))
+            .and_then(handlers::get_danmu_file)
+    }
+    fn with_postgres(postgres: Postgres) -> impl Filter<Extract = (Postgres,), Error = std::convert::Infallible> + Clone {
+        warp::any().map(move || postgres.clone())
+    }
 }
 
 mod ui {
@@ -187,7 +209,7 @@ mod ui {
 
 mod handlers {
     use std::convert::Infallible;
-    use super::models::{Db, GetMediaSegmentOptions, GetM3u8PlaylistOptions};
+    use super::models::{Postgres, Db, GetMediaSegmentOptions, GetM3u8PlaylistOptions};
     use super::*;
 
     pub async fn get_media_segment(
@@ -225,11 +247,22 @@ mod handlers {
         let streams = db.list_video_streams(scope_name).await.unwrap();
         Ok(warp::reply::json(&streams))
     }
+
+    pub async fn get_danmu_file(
+        scope_name: String,
+        stream_name: String,
+        opts: GetM3u8PlaylistOptions,
+        postgres: Postgres,
+    ) -> Result<impl warp::Reply, Infallible> {
+        postgres.get_danmu_file(scope_name, stream_name, opts).await
+    }
 }
 
 mod models {
     use anyhow;
     use chrono::{DateTime, Utc};
+    use diesel::pg::PgConnection;
+    use diesel::prelude::*;
     use futures::{StreamExt, future};
     use hyper::body::{Body, Bytes};
     use pravega_client::client_factory::ClientFactoryAsync;
@@ -243,6 +276,132 @@ mod models {
     use std::convert::Infallible;
     use std::io::{ErrorKind, Read, Seek, SeekFrom};
     use super::*;
+
+    #[derive(Deserialize, Serialize, Queryable)]
+    pub struct Video {
+        pub id: i32,
+        pub scope: String,
+        pub stream: String,
+        pub start_time: String,
+        pub end_time: String,
+        pub likes: i32,
+    }
+
+    diesel::table! {
+        videos (id) {
+            id -> Int4,
+            scope -> Varchar,
+            stream -> Varchar,
+            start_time -> Varchar,
+            end_time -> Varchar,
+            likes -> Int4,
+        }
+    }
+
+    #[derive(Queryable)]
+    pub struct Danmu {
+        pub id: i32,
+        pub video_id: i32,
+        pub stime: f32,
+        pub mode: i32,
+        pub size: i32,
+        pub color: i32,
+        pub timestamp: i32,
+        pub pool: i32,
+        pub user_id: String,
+        pub dbid: i64,
+        pub mask: i32,
+        pub content: String,
+    }
+
+    diesel::table! {
+        danmuku (id) {
+            id -> Int4,
+            video_id -> Int4,
+            stime -> Float4,
+            mode -> Int4,
+            size -> Int4,
+            color -> Int4,
+            timestamp -> Int4,
+            pool -> Int4,
+            user_id -> Varchar,
+            dbid -> Int8,
+            mask -> Int4,
+            content -> VarChar,
+        }
+    }
+
+    #[derive(Clone)]
+    pub struct Postgres {
+        pub database_url: String,
+    }
+
+    impl Postgres {
+        pub async fn get_danmu_file(
+            self,
+            scope_name: String,
+            stream_name: String,
+            opts: GetM3u8PlaylistOptions,
+        ) -> Result<impl warp::Reply, Infallible> {
+            info!("get_danmu_file: scope_name={}, stream_name={}, begin={:?}, end={:?}", scope_name, stream_name, opts.begin, opts.end);
+            assert!(opts.begin <= opts.end);
+
+            let database_url = "";
+            let mut conn = PgConnection::establish(&database_url).unwrap_or_else(|_| panic!("Error connecting to {}", database_url));
+            
+            let videos = self::videos::dsl::videos
+                .filter(self::videos::dsl::scope.eq(scope_name))
+                .filter(self::videos::dsl::stream.eq(stream_name))
+                .limit(1)
+                .load::<Video>(&mut conn)
+                .expect("Error loading video list");
+            
+            assert!(videos.len() < 1);
+
+            let video_id = videos[0].id;
+            let start_time = videos[0].start_time.clone();
+            let datetime = DateTime::parse_from_rfc3339(&start_time).unwrap();
+            let start_timestamp = datetime.with_timezone(&Utc);
+            let begin = match opts.begin {
+                Some(t) => {
+                    if t < start_timestamp {
+                        0 as f32
+                    } else {
+                        (t - start_timestamp).num_seconds() as f32
+                    }
+                },
+                None => 0 as f32,
+            };
+            let end = match opts.end {
+                Some(t) => {
+                    if t < start_timestamp {
+                        0 as f32
+                    } else {
+                        (t - start_timestamp).num_seconds() as f32
+                    }
+                },
+                None => f32::MAX,
+            };
+            info!("get_danmu_file: video id={}, begin={}s, end={}s", video_id, begin, end);
+            let danmus = self::danmuku::dsl::danmuku
+                .filter(self::danmuku::dsl::video_id.eq(video_id))
+                .filter(self::danmuku::dsl::stime.gt(begin))
+                .filter(self::danmuku::dsl::stime.lt(end))
+                .load::<Danmu>(&mut conn)
+                .expect("Error loading danmu list");
+            info!("get_danmu_file: danmu list length={}s", danmus.len());
+
+            let danmu_list = r#"<d p="1,1,25,16777215,1666774369,0,18a4dd3d,1171747350759326976,11">好家伙，这个更可爱</d><d p="3.43600,1,25,16777215,1666773410,0,2d034e11,1171739307107660288,11">好可爱来姐姐亲亲</d>"#;
+            let content = format!("<i><chatserver>chat.bilibili.com</chatserver><chatid>869480093</chatid><mission>0</mission><maxlimit>1000</maxlimit><state>0</state><real_name>0</real_name><source>k-v</source>{}</i>", danmu_list);
+            let body = Body::from(content);
+            
+            Ok(warp::reply::with_header(warp::reply::Response::new(body), "content-type", "text/xml"))
+        }
+    }
+
+    pub fn new_postgres(database_url: String) -> Postgres {
+        Postgres { database_url }
+    }
 
     #[derive(Clone)]
     pub struct Db {
