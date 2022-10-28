@@ -5,8 +5,10 @@ HOST_IP=192.168.31.250 PRAVEGA_LTS_PATH=/home/luis/Documents/pravega_lts ./prave
 # ingest test video
 PRAVEGA_CONTROLLER=10.247.97.51:9090 ./scripts/videotestsrc-to-pravega-hls.sh
 
-# ingest bilibili video
+# ingest bilibili video & danmu
 VIDEO_FILE=/home/luis/projects/nautilus-gstreamer/gstreamer-pravega/bilibili/这小家伙能干翻长颈鹿？？？.mp4 PRAVEGA_STREAM=BV1hV4y157XN PRAVEGA_CONTROLLER=10.247.97.51:9090 ./scripts/file-to-pravega.sh
+
+python danmu-loader.py --danmu-file --video-id 1
 
 # run video server
 cd pravega-video-server && cargo build --release && tar -zcvf pravega-video-server.tar.gz ../target/release/pravega-video-server resources && scp pravega-video-server.tar.gz luis@node2:/home/luis/video-server

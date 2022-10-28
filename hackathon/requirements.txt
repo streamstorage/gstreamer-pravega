@@ -1,0 +1,2 @@
+configargparse
+psycopg2-binary
