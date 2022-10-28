@@ -14,6 +14,8 @@ python danmu-loader.py --danmu-file --video-id 1
 cd pravega-video-server && cargo build --release && tar -zcvf pravega-video-server.tar.gz ../target/release/pravega-video-server resources && scp pravega-video-server.tar.gz luis@node2:/home/luis/video-server
 nohup ./target/release/pravega-video-server&
 
+PRAVEGA_CONTROLLER_URI=10.247.97.51:9090 POSTGRES_URI=postgres://admin:password@10.247.97.51:5432/hackathon ../target/debug/pravega-video-server
+
 ## env
 postgresql: 10.247.97.51:5432 user/pass: admin/password
 postgresql admin portal: http://10.247.97.51:8080/

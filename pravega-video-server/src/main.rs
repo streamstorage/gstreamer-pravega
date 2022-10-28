@@ -260,7 +260,7 @@ mod handlers {
 
 mod models {
     use anyhow;
-    use chrono::{DateTime, Utc};
+    use chrono::{DateTime, NaiveDateTime, Utc};
     use diesel::pg::PgConnection;
     use diesel::prelude::*;
     use futures::{StreamExt, future};
@@ -346,8 +346,7 @@ mod models {
             info!("get_danmu_file: scope_name={}, stream_name={}, begin={:?}, end={:?}", scope_name, stream_name, opts.begin, opts.end);
             assert!(opts.begin <= opts.end);
 
-            let database_url = "";
-            let mut conn = PgConnection::establish(&database_url).unwrap_or_else(|_| panic!("Error connecting to {}", database_url));
+            let mut conn = PgConnection::establish(&self.database_url).unwrap_or_else(|_| panic!("Error connecting to {}", self.database_url));
             
             let videos = self::videos::dsl::videos
                 .filter(self::videos::dsl::scope.eq(scope_name))
@@ -356,18 +355,19 @@ mod models {
                 .load::<Video>(&mut conn)
                 .expect("Error loading video list");
             
-            assert!(videos.len() < 1);
+            assert!(videos.len() == 1);
 
             let video_id = videos[0].id;
             let start_time = videos[0].start_time.clone();
-            let datetime = DateTime::parse_from_rfc3339(&start_time).unwrap();
+            let naive_datetime = NaiveDateTime::parse_from_str(&start_time, "%Y-%m-%d %H:%M:%S").unwrap();
+            let datetime = DateTime::<Utc>::from_utc(naive_datetime, Utc);
             let start_timestamp = datetime.with_timezone(&Utc);
             let begin = match opts.begin {
                 Some(t) => {
                     if t < start_timestamp {
                         0 as f32
                     } else {
-                        (t - start_timestamp).num_seconds() as f32
+                        (t - start_timestamp).num_milliseconds() as f32 / 1000.0
                     }
                 },
                 None => 0 as f32,
@@ -377,7 +377,7 @@ mod models {
                     if t < start_timestamp {
                         0 as f32
                     } else {
-                        (t - start_timestamp).num_seconds() as f32
+                        (t - start_timestamp).num_milliseconds() as f32 / 1000.0
                     }
                 },
                 None => f32::MAX,
@@ -389,9 +389,13 @@ mod models {
                 .filter(self::danmuku::dsl::stime.lt(end))
                 .load::<Danmu>(&mut conn)
                 .expect("Error loading danmu list");
-            info!("get_danmu_file: danmu list length={}s", danmus.len());
+            info!("get_danmu_file: danmu list length={}", danmus.len());
+            let mut danmu_list = format!("");
+            for item in danmus {
+                danmu_list = format!("{}<d p=\"{},{},{},{},{},{},{},{},{}\">{}</d>", danmu_list, item.stime - begin, item.mode, item.size, item.color, item.timestamp, item.pool, item.user_id, item.dbid, item.mask, item.content);
+            }
 
-            let danmu_list = r#"<d p="1,1,25,16777215,1666774369,0,18a4dd3d,1171747350759326976,11">好家伙，这个更可爱</d><d p="3.43600,1,25,16777215,1666773410,0,2d034e11,1171739307107660288,11">好可爱来姐姐亲亲</d>"#;
+            //let danmu_list = r#"<d p="1,1,25,16777215,1666774369,0,18a4dd3d,1171747350759326976,11">好家伙，这个更可爱</d><d p="3.43600,1,25,16777215,1666773410,0,2d034e11,1171739307107660288,11">好可爱来姐姐亲亲</d>"#;
             let content = format!("<i><chatserver>chat.bilibili.com</chatserver><chatid>869480093</chatid><mission>0</mission><maxlimit>1000</maxlimit><state>0</state><real_name>0</real_name><source>k-v</source>{}</i>", danmu_list);
             let body = Body::from(content);
             
