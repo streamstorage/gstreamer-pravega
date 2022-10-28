@@ -3,8 +3,8 @@ CREATE TABLE videos (
     id INT GENERATED ALWAYS AS IDENTITY,
     scope varchar(100) NOT NULL,
     stream varchar(100) NOT NULL,
-    start_time varchar(30) NOT NULL,
-    end_time varchar(30) NOT NULL,
+    start_time timestamp NOT NULL,
+    end_time timestamp NOT NULL,
     likes integer NOT NULL,
     PRIMARY KEY(id)
 );

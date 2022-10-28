@@ -282,8 +282,8 @@ mod models {
         pub id: i32,
         pub scope: String,
         pub stream: String,
-        pub start_time: String,
-        pub end_time: String,
+        pub start_time: NaiveDateTime,
+        pub end_time: NaiveDateTime,
         pub likes: i32,
     }
 
@@ -292,8 +292,8 @@ mod models {
             id -> Int4,
             scope -> Varchar,
             stream -> Varchar,
-            start_time -> Varchar,
-            end_time -> Varchar,
+            start_time -> Timestamp,
+            end_time -> Timestamp,
             likes -> Int4,
         }
     }
@@ -359,8 +359,7 @@ mod models {
 
             let video_id = videos[0].id;
             let start_time = videos[0].start_time.clone();
-            let naive_datetime = NaiveDateTime::parse_from_str(&start_time, "%Y-%m-%d %H:%M:%S").unwrap();
-            let datetime = DateTime::<Utc>::from_utc(naive_datetime, Utc);
+            let datetime = DateTime::<Utc>::from_utc(start_time, Utc);
             let start_timestamp = datetime.with_timezone(&Utc);
             let begin = match opts.begin {
                 Some(t) => {
