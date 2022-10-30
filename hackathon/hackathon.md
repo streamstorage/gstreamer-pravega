@@ -12,7 +12,7 @@ python danmu-loader.py --danmu-file --video-id 1
 
 # run video server
 cd pravega-video-server && cargo build --release && tar -zcvf pravega-video-server.tar.gz ../target/release/pravega-video-server resources && scp pravega-video-server.tar.gz luis@node2:/home/luis/video-server
-nohup ./target/release/pravega-video-server&
+cd video-server && nohup ./target/release/pravega-video-server && rm nohup.out resources/ target/ -rf && tar -zxvf pravega-video-server.tar.gz && sudo systemctrl restart pravega-video-server.service
 
 PRAVEGA_CONTROLLER_URI=10.247.97.51:9090 POSTGRES_URI=postgres://admin:password@10.247.97.51:5432/hackathon ../target/debug/pravega-video-server
 
