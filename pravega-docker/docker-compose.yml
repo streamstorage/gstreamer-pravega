@@ -28,6 +28,9 @@ services:
         ipv4_address: 172.28.1.11
     ports:
       - "2181:2181"
+    volumes:
+      - ${PRAVEGA_LTS_PATH}/zk/data:/data
+      - ${PRAVEGA_LTS_PATH}/zk/datalog:/datalog
     restart: always
 
   bookie1:
@@ -49,6 +52,8 @@ services:
         ipv4_address: 172.28.1.21
     ports:
       - "3181:3181"
+    volumes:
+      - ${PRAVEGA_LTS_PATH}/bk1:/bk
     restart: always
 
   controller:
@@ -106,10 +111,8 @@ services:
         ipv4_address: 172.28.1.41
     restart: always
     volumes:
-      - ${PRAVEGA_LTS_PATH:-pravega-lts-volume}:/pravega-lts
+      - ${PRAVEGA_LTS_PATH}:/pravega-lts
 
-volumes:
-  pravega-lts-volume:
 networks:
   pravega_net:
     ipam:

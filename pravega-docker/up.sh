@@ -13,8 +13,8 @@
 set -ex
 ROOT_DIR=$(readlink -f $(dirname $0))
 cd ${ROOT_DIR}
-export HOST_IP=${HOST_IP:-192.168.120.128}
-export PRAVEGA_LTS_PATH=${PRAVEGA_LTS_PATH-/tmp/pravega-lts}
+export HOST_IP=${HOST_IP:-127.0.0.1}
+export PRAVEGA_LTS_PATH=${PRAVEGA_LTS_PATH:-/tmp/pravega-lts}
 docker compose down -v
 
 if ! [ -z "${PRAVEGA_LTS_PATH}" ]

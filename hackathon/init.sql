@@ -28,7 +28,7 @@ CREATE TABLE danmuku (
     content text,
     location varchar(50),
     CONSTRAINT fk_videos
-      FOREIGN KEY(videos_id) 
+      FOREIGN KEY(video_id) 
 	  REFERENCES videos(id)
 	  ON DELETE CASCADE
 );
