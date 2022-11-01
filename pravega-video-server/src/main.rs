@@ -55,11 +55,10 @@ fn main() {
     let runtime  = Runtime::new().unwrap();
     let config = utils::create_client_config(opts.pravega_controller_uri, Some(opts.keycloak_service_account_file)).expect("creating config");
     let client_factory = ClientFactoryAsync::new(config, runtime.handle().to_owned());
-    let client_factory_db = client_factory.clone();
     let database_url = opts.postgres_url.clone();
 
     runtime.block_on(async {
-        let db = models::new(client_factory_db);
+        let db = models::new(client_factory);
         let postgres = models::new_postgres(database_url);
         let api = filters::get_all_filters(db, postgres);
         let ui = ui::get_all_filters();
@@ -470,12 +469,11 @@ mod models {
 
             // Use spawn_blocking to allow Pravega non-async methods to block this thread.
             // See https://stackoverflow.com/a/65452213/5890553.
-
-            let chunks = self.client_factory.runtime_handle().spawn_blocking(move || {
+            let client_factory = self.client_factory.clone();
+            let (chunks, length) = client_factory.runtime_handle().spawn_blocking(move || {
                 let span = span!(Level::INFO, "get_media_segment: SPAWNED THREAD");
                 span.in_scope(|| {
                     info!("BEGIN");
-                    let client_factory = self.client_factory;
                     let scoped_stream = ScopedStream {
                         scope: Scope::from(scope_name),
                         stream: Stream::from(stream_name),
@@ -489,7 +487,7 @@ mod models {
                     let mut reader = reader.take(limit);
 
                     let mut chunks: Vec<Result<Bytes, std::io::Error>> = Vec::new();
-
+                    let mut length = 0;
                     loop {
                         let mut event_reader = EventReader::new();
                         let required_buffer_length =
@@ -511,12 +509,13 @@ mod models {
                             Err(e) => return Err(e),
                         };
                         trace!("event={:?}", event);
+                        length += event.payload.len();
                         chunks.push(Ok(Bytes::copy_from_slice(&event.payload)));
                     }
                     info!("Created {} chunks", chunks.len());
                     assert!(reader.limit() == 0);
                     info!("END");
-                    Ok(chunks)
+                    Ok((chunks, length))
                 })
             })
             .await
@@ -529,7 +528,14 @@ mod models {
             // TODO: Get content type from Pravega stream tag. For now "video/mp4" appears to work for MP4 and MPEG TS.
             // let content_type = "video/MP2T";
             let content_type = "video/mp4";
-            Ok(warp::reply::with_header(warp::reply::Response::new(body), "content-type", content_type))
+            //Ok(warp::reply::with_header(warp::reply::Response::new(body), "content-type", content_type))
+            let builder = warp::http::response::Builder::new();
+            Ok(builder
+            .header("content-type", content_type)
+            .header("Content-Length", length)
+            .status(200)
+            .body(body)
+            .unwrap())
         }
 
         pub async fn get_m3u8_playlist(
@@ -577,8 +583,24 @@ mod models {
                             begin_index_record, end_index_record, have_all_data);
                     let mut index_reader = index_searcher.into_inner();
 
+                    // skip the record with false rand 
+                    let index_begin_offset = if !(begin_index_record.0.random_access) {
+                        let mut index_record_reader = IndexRecordReader::new();
+                        let mut offset = begin_index_record.1;
+                        loop {
+                            offset += IndexRecord::RECORD_SIZE as u64;
+                            index_reader.seek(SeekFrom::Start(offset)).unwrap();
+                            let index_record = index_record_reader.read(&mut index_reader).unwrap();
+                            if index_record.random_access {
+                                break offset;
+                            }
+                        }
+                    } else {
+                        begin_index_record.1   
+                    };
+
                     // Determine begin and end offsets of the index.
-                    let index_begin_offset = begin_index_record.1;
+                    // let index_begin_offset = begin_index_record.1;
                     let index_end_offset = end_index_record.1 + IndexRecord::RECORD_SIZE as u64;
                     let index_size = index_end_offset - index_begin_offset;
                     info!("index_begin_offset={}, index_end_offset={}, index_size={}", index_begin_offset, index_end_offset, index_size);

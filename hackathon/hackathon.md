@@ -33,5 +33,6 @@ https://www.youtube.com/embed/A-UV7Z13uAQ
 
 USE_NEW_NVSTREAMMUX=yes  gst-launch-1.0 uridecodebin3 uri=$input1 name=demux1 ! queue ! nvvideoconvert ! "video/x-raw(memory:NVMM)" ! mux1.sink_0 nvstreammux batch-size=1 sync-inputs=1 max-latency=250000000 name=mux1 ! queue ! nvmultistreamtiler ! nvvideoconvert ! "video/x-raw(memory:NVMM)" ! nvv4l2h264enc ! h264parse ! queue ! flvmux name=mux streamable=true ! filesink location=out.flv  async=0 qos=0 sync=1 demux1. ! queue ! audioconvert ! audiomux.sink_0 nvstreammux name=audiomux batch-size=1 max-latency=250000000 sync-inputs=1 ! nvstreamdemux name=audiodemux audiodemux.src_0  ! audioconvert ! mixer.sink_0 audiomixer latency=250000000 name=mixer ! queue ! avenc_aac ! aacparse ! queue ! mux. fakesrc num-buffers=0 is-live=1 ! mixer. -e
 
-http://127.0.0.1:3030/player?scope=bilibili&stream=BV1hV4y157XN&begin=2022-10-30T05:55:47.57Z&end=2022-10-30T06:00:37.89Z
-http://127.0.0.1:3030/player?scope=bilibili&stream=BV1hV4y157XN&begin=2022-10-30T05:55:47.57Z&end=2022-10-30T05:55:57.89Z
+http://127.0.0.1:3030/player?scope=bilibili&stream=BV1hV4y157XN&begin=2022-10-30T05:55:47Z&end=2022-10-30T06:00:37Z
+http://127.0.0.1:3030/player?scope=bilibili&stream=BV1hV4y157XN&begin=2022-10-30T05:55:57Z&end=2022-10-30T05:56:07Z
+
