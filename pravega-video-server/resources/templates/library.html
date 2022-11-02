@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+
+<!--
+Copyright (c) Dell Inc., or its subsidiaries. All Rights Reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+-->
+
+<html>
+
+<head>
+    <title>Pravega Video Player</title>
+    <meta charset="UTF-8" />
+</head>
+
+<body>
+    <div>
+        <h3>Video Library</h3>
+        <table>
+            <tr>
+                <th>id</th>
+                <th>link</th>
+            </tr>
+            {% for video in videos %}
+            <tr>
+                <td>{{ video.id }}</td>
+                <td><a target="_blank" href="{{"/player?scope={}&stream={}&begin={}Z&end={}Z"|format(video.scope, video.stream, video.start_time|myfilter, video.end_time|myfilter)}}">{{"/player?scope={}&stream={}&begin={}Z&end={}Z"|format(video.scope, video.stream, video.start_time|myfilter, video.end_time|myfilter)}}</a></td>
+            <?tr>
+            {% endfor %}
+        </table>
+    </div>
+</body>
+
+</html>

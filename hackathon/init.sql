@@ -29,6 +29,8 @@ CREATE TABLE danmuku (
     mask integer,
     content text,
     location varchar(50),
+    score real,
+    score_color integer,
     CONSTRAINT fk_videos
       FOREIGN KEY(video_id) 
 	  REFERENCES videos(id)

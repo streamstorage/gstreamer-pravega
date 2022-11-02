@@ -60,8 +60,8 @@ fn main() {
     runtime.block_on(async {
         let db = models::new(client_factory);
         let postgres = models::new_postgres(database_url);
-        let api = filters::get_all_filters(db, postgres);
-        let ui = ui::get_all_filters();
+        let api = filters::get_all_filters(db, postgres.clone());
+        let ui = ui::get_all_filters(postgres);
         let static_dir = warp::path("static").and(warp::fs::dir(static_dir_name));
         // let redirect = warp::path::end().map(|| {
         //     warp::redirect::temporary(Uri::from_static("/static/hls-js.html"))
@@ -173,6 +173,11 @@ mod ui {
     use serde_derive::{Deserialize, Serialize};
     use super::*;
     use warp::Filter;
+    use askama::Template;
+    use super::models::Postgres;
+    use diesel::pg::PgConnection;
+    use diesel::prelude::*;
+    use chrono::NaiveDateTime;
 
     #[derive(Debug, Deserialize, Serialize)]
     pub struct GetPlayerHtmlOptions {
@@ -185,8 +190,10 @@ mod ui {
     }
 
     pub fn get_all_filters(
+        postgres: Postgres,
     ) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
         get_player_html()
+        .or(get_library_html(postgres.clone()))
     }
 
     pub fn get_player_html(
@@ -202,7 +209,66 @@ mod ui {
                 hb.register_template_file(template_name, template_file_name).unwrap();
                 let html = hb.render(template_name, &opts).unwrap();
                 Ok(warp::reply::html(html))
-                })
+            })
+    }
+
+    #[derive(Deserialize, Serialize, Queryable, Debug)]
+    pub struct Video {
+        pub id: i32,
+        pub scope: String,
+        pub stream: String,
+        pub start_time: NaiveDateTime,
+        pub end_time: NaiveDateTime,
+        pub likes: i32,
+    }
+
+    diesel::table! {
+        videos (id) {
+            id -> Int4,
+            scope -> Varchar,
+            stream -> Varchar,
+            start_time -> Timestamp,
+            end_time -> Timestamp,
+            likes -> Int4,
+        }
+    }
+
+    #[derive(Template)]
+    #[template(path = "library.html")]
+    struct VideosTemplate<'a> {
+        videos: &'a Vec<Video>,
+    }
+
+    mod filters {
+        use chrono::NaiveDateTime;
+        pub fn myfilter(s: &NaiveDateTime) -> ::askama::Result<String> {
+            Ok(format!("{:?}", s))
+        }
+    }
+
+    pub fn get_library_html(
+        postgres: Postgres,
+    ) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
+        warp::path!("videos")
+            .and(warp::get())
+            .and(with_postgres(postgres))
+            .map(|postgres: Postgres| {
+                let mut conn = PgConnection::establish(&postgres.database_url).unwrap_or_else(|_| panic!("Error connecting to {}", postgres.database_url));
+                let videos = self::videos::dsl::videos
+                    .load::<Video>(&mut conn)
+                    .expect("Error loading video list");
+                    info!("{:?}", videos);
+                let template = VideosTemplate {
+                        videos: &videos,
+                    };
+                let res = template
+                    .render().unwrap();
+                Ok(warp::reply::html(res))
+            })
+    }
+
+    fn with_postgres(postgres: Postgres) -> impl Filter<Extract = (Postgres,), Error = std::convert::Infallible> + Clone {
+        warp::any().map(move || postgres.clone())
     }
 }
 
@@ -311,6 +377,7 @@ mod models {
         pub dbid: i64,
         pub mask: i32,
         pub content: String,
+        pub score_color: Option<i32>,
     }
 
     diesel::table! {
@@ -327,6 +394,7 @@ mod models {
             dbid -> Int8,
             mask -> Int4,
             content -> VarChar,
+            score_color -> Nullable<Int4>,
         }
     }
 
@@ -390,7 +458,8 @@ mod models {
             info!("get_danmu_file: danmu list length={}", danmus.len());
             let mut danmu_list = format!("");
             for item in danmus {
-                danmu_list = format!("{}<d p=\"{},{},{},{},{},{},{},{},{}\">{}</d>", danmu_list, item.stime - begin, item.mode, item.size, item.color, item.timestamp, item.pool, item.user_id, item.dbid, item.mask, item.content);
+                let color = item.score_color.unwrap_or(item.color);
+                danmu_list = format!("{}<d p=\"{},{},{},{},{},{},{},{},{}\">{}</d>", danmu_list, item.stime - begin, item.mode, item.size, color, item.timestamp, item.pool, item.user_id, item.dbid, item.mask, item.content);
             }
 
             //let danmu_list = r#"<d p="1,1,25,16777215,1666774369,0,18a4dd3d,1171747350759326976,11">好家伙，这个更可爱</d><d p="3.43600,1,25,16777215,1666773410,0,2d034e11,1171739307107660288,11">好可爱来姐姐亲亲</d>"#;
