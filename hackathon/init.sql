@@ -6,6 +6,8 @@ CREATE TABLE videos (
     start_time timestamp NOT NULL,
     end_time timestamp NOT NULL,
     likes integer NOT NULL,
+    title varchar(255),
+    category varchar(255),
     PRIMARY KEY(id)
 );
 

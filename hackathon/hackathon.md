@@ -6,6 +6,9 @@ HOST_IP=192.168.3.13 PRAVEGA_LTS_PATH=/home/luis/Documents/pravega_lts ./pravega
 PRAVEGA_CONTROLLER=10.247.97.51:9090 ./scripts/videotestsrc-to-pravega-hls.sh
 
 # ingest bilibili video & danmu
+https://github.com/nilaoda/BBDown
+./bbdown BV1DL4y1w7Gy -tv -dd
+
 VIDEO_FILE=/home/luis/projects/nautilus-gstreamer/gstreamer-pravega/bilibili/这小家伙能干翻长颈鹿？？？.mp4 PRAVEGA_STREAM=BV1hV4y157XN PRAVEGA_CONTROLLER=10.247.97.51:9090 ./scripts/file-to-pravega.sh
 
 VIDEO_FILE=/home/luis/Downloads/bbdown/这小家伙能干翻长颈鹿？？？.mp4 PRAVEGA_STREAM=BV1hV4y157XN ./scripts/file-to-pravega.sh
