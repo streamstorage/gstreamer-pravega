@@ -23,12 +23,14 @@ You may obtain a copy of the License at
         <table>
             <tr>
                 <th>id</th>
+                <th>category</th>
                 <th>title</th>
                 <th>link</th>
             </tr>
             {% for video in videos %}
             <tr>
-                <td>{{ video.id }}</td>
+                <td>{{ loop.index }}</td>
+                <td>{{ video.category }}</td>
                 <td>{{ video.title }}</td>
                 <td><a target="_blank" href="{{"/player?scope={}&stream={}&begin={}Z&end={}Z"|format(video.scope, video.stream, video.start_time|myfilter, video.end_time|myfilter)}}">{{"/player?scope={}&stream={}&begin={}Z&end={}Z"|format(video.scope, video.stream, video.start_time|myfilter, video.end_time|myfilter)}}</a></td>
             <?tr>

@@ -220,6 +220,7 @@ mod ui {
         pub start_time: NaiveDateTime,
         pub end_time: NaiveDateTime,
         pub title: String,
+        pub category: String,
     }
 
     diesel::table! {
@@ -230,6 +231,7 @@ mod ui {
             start_time -> Timestamp,
             end_time -> Timestamp,
             title -> Varchar,
+            category -> Varchar,
         }
     }
 
@@ -255,6 +257,8 @@ mod ui {
             .map(|postgres: Postgres| {
                 let mut conn = PgConnection::establish(&postgres.database_url).unwrap_or_else(|_| panic!("Error connecting to {}", postgres.database_url));
                 let videos = self::videos::dsl::videos
+                    .order_by(self::videos::dsl::category.desc())
+                    .then_order_by(self::videos::dsl::id.asc())
                     .load::<Video>(&mut conn)
                     .expect("Error loading video list");
                     info!("{:?}", videos);
