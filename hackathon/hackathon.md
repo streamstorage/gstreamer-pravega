@@ -9,16 +9,17 @@ PRAVEGA_CONTROLLER=10.247.97.51:9090 ./scripts/videotestsrc-to-pravega-hls.sh
 https://github.com/nilaoda/BBDown
 ./bbdown BV1DL4y1w7Gy -tv -dd
 
-VIDEO_FILE=/home/luis/projects/nautilus-gstreamer/gstreamer-pravega/bilibili/这小家伙能干翻长颈鹿？？？.mp4 PRAVEGA_STREAM=BV1hV4y157XN PRAVEGA_CONTROLLER=10.247.97.51:9090 ./scripts/file-to-pravega.sh
+
+VIDEO_FILE="/home/luis/Downloads/bilibili/猫妈妈和小奶猫.mp4" PRAVEGA_STREAM=BV1xA411v7jA PRAVEGA_CONTROLLER=10.247.97.51:9090 ./scripts/file-to-pravega.sh
 
 VIDEO_FILE=/home/luis/Downloads/bbdown/这小家伙能干翻长颈鹿？？？.mp4 PRAVEGA_STREAM=BV1hV4y157XN ./scripts/file-to-pravega.sh
 
-PRAVEGA_SCOPE=bilibili PRAVEGA_STREAM=BV1hV4y157XN ./scripts/pravega-table-updater.sh
+PRAVEGA_SCOPE=bilibili PRAVEGA_STREAM=BV1xA411v7jA ./scripts/pravega-table-updater.sh
 python danmu-loader.py --danmu-file --video-id 1
 
 # run video server
 cd pravega-video-server && cargo build --release && tar -zcvf pravega-video-server.tar.gz ../target/release/pravega-video-server resources && scp pravega-video-server.tar.gz luis@node2:/home/luis/video-server
-cd video-server && nohup ./target/release/pravega-video-server && rm nohup.out resources/ target/ -rf && tar -zxvf pravega-video-server.tar.gz && sudo systemctrl restart pravega-video-server.service
+cd video-server && rm nohup.out resources/ target/ -rf && tar -zxvf pravega-video-server.tar.gz && sudo systemctl restart pravega-video-server.service
 
 PRAVEGA_CONTROLLER_URI=10.247.97.51:9090 POSTGRES_URI=postgres://admin:password@10.247.97.51:5432/hackathon ./scripts/pravega-video-server.sh
 

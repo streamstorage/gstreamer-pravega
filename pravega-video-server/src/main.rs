@@ -219,7 +219,7 @@ mod ui {
         pub stream: String,
         pub start_time: NaiveDateTime,
         pub end_time: NaiveDateTime,
-        pub likes: i32,
+        pub title: String,
     }
 
     diesel::table! {
@@ -229,7 +229,7 @@ mod ui {
             stream -> Varchar,
             start_time -> Timestamp,
             end_time -> Timestamp,
-            likes -> Int4,
+            title -> Varchar,
         }
     }
 

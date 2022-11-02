@@ -11,9 +11,6 @@ CREATE TABLE videos (
     PRIMARY KEY(id)
 );
 
-INSERT INTO videos(scope, stream, start_time, end_time, likes)
-VALUES('bilibili', 'BV1hV4y157XN', '2022-10-26 10:34:15', '2022-10-26 10:39:05', 234);
-
 DROP TABLE IF EXISTS danmuku;
 CREATE TABLE danmuku (
     id INT GENERATED ALWAYS AS IDENTITY,
