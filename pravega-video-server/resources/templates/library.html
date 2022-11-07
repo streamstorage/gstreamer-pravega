@@ -25,14 +25,18 @@ You may obtain a copy of the License at
                 <th>id</th>
                 <th>category</th>
                 <th>title</th>
-                <th>link</th>
+                <th>link1</th>
+                <th>link2</th>
+                <th>link3</th>
             </tr>
             {% for video in videos %}
             <tr>
                 <td>{{ loop.index }}</td>
                 <td>{{ video.category }}</td>
                 <td>{{ video.title }}</td>
-                <td><a target="_blank" href="{{"/player?scope={}&stream={}&begin={}Z&end={}Z"|format(video.scope, video.stream, video.start_time|myfilter, video.end_time|myfilter)}}">{{"/player?scope={}&stream={}&begin={}Z&end={}Z"|format(video.scope, video.stream, video.start_time|myfilter, video.end_time|myfilter)}}</a></td>
+                <td><a target="_blank" href="{{"/player?scope={}&stream={}&begin={}Z&end={}Z"|format(video.scope, video.stream, video.start_time|myfilter, video.end_time|myfilter)}}">with danmu after sentiment</a></td>
+                <td><a target="_blank" href="{{"/player?scope={}&stream={}&begin={}Z&end={}Z&mode=1"|format(video.scope, video.stream, video.start_time|myfilter, video.end_time|myfilter)}}">with original danmu</a></td>
+                <td><a target="_blank" href="{{"/player?scope={}&stream={}&begin={}Z&end={}Z&mode=2"|format(video.scope, video.stream, video.start_time|myfilter, video.end_time|myfilter)}}">with danmu in white</a></td>
             <?tr>
             {% endfor %}
         </table>

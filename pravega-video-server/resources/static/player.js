@@ -14,7 +14,13 @@ function load_video() {
     }
 
     var manifestUri = "/scopes/" + scope + "/streams/" + stream + "/m3u8" + query;
+
+    var mode = document.getElementById("mode").className;
     var danmuUri = "/scopes/" + scope + "/streams/" + stream + "/danmu" + query;
+    if (mode != "") {
+        danmuUri = danmuUri + "&mode=" + mode.toString();
+    }
+
     console.log(manifestUri);
     console.log(danmuUri);
     

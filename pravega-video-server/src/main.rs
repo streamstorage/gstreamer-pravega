@@ -87,7 +87,7 @@ fn ensure_extra_files(resource_dir: String) {
 
 mod filters {
     use super::handlers;
-    use super::models::{Postgres, Db, GetMediaSegmentOptions, GetM3u8PlaylistOptions};
+    use super::models::{Postgres, Db, GetMediaSegmentOptions, GetM3u8PlaylistOptions, GetDanmuOptions};
     use warp::Filter;
 
     pub fn get_all_filters(
@@ -158,7 +158,7 @@ mod filters {
     ) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
         warp::path!("scopes" / String / "streams" / String / "danmu" )
             .and(warp::get())
-            .and(warp::query::<GetM3u8PlaylistOptions>())
+            .and(warp::query::<GetDanmuOptions>())
             .and(with_postgres(postgres))
             .and_then(handlers::get_danmu_file)
     }
@@ -187,6 +187,7 @@ mod ui {
         pub stream_name: Option<String>,
         pub begin: Option<DateTime<Utc>>,
         pub end: Option<DateTime<Utc>>,
+        pub mode: Option<u64>,
     }
 
     pub fn get_all_filters(
@@ -278,7 +279,7 @@ mod ui {
 
 mod handlers {
     use std::convert::Infallible;
-    use super::models::{Postgres, Db, GetMediaSegmentOptions, GetM3u8PlaylistOptions};
+    use super::models::{Postgres, Db, GetMediaSegmentOptions, GetM3u8PlaylistOptions, GetDanmuOptions};
     use super::*;
 
     pub async fn get_media_segment(
@@ -320,7 +321,7 @@ mod handlers {
     pub async fn get_danmu_file(
         scope_name: String,
         stream_name: String,
-        opts: GetM3u8PlaylistOptions,
+        opts: GetDanmuOptions,
         postgres: Postgres,
     ) -> Result<impl warp::Reply, Infallible> {
         postgres.get_danmu_file(scope_name, stream_name, opts).await
@@ -412,7 +413,7 @@ mod models {
             self,
             scope_name: String,
             stream_name: String,
-            opts: GetM3u8PlaylistOptions,
+            opts: GetDanmuOptions,
         ) -> Result<impl warp::Reply, Infallible> {
             info!("get_danmu_file: scope_name={}, stream_name={}, begin={:?}, end={:?}", scope_name, stream_name, opts.begin, opts.end);
             assert!(opts.begin <= opts.end);
@@ -452,7 +453,8 @@ mod models {
                 },
                 None => f32::MAX,
             };
-            info!("get_danmu_file: video id={}, begin={}s, end={}s", video_id, begin, end);
+            let mode = opts.mode.unwrap_or(0);
+            info!("get_danmu_file: video id={}, begin={}s, end={}s, mode={}", video_id, begin, end, mode);
             let danmus = self::danmuku::dsl::danmuku
                 .filter(self::danmuku::dsl::video_id.eq(video_id))
                 .filter(self::danmuku::dsl::stime.gt(begin))
@@ -462,7 +464,11 @@ mod models {
             info!("get_danmu_file: danmu list length={}", danmus.len());
             let mut danmu_list = format!("");
             for item in danmus {
-                let color = item.score_color.unwrap_or(item.color);
+                let color = match mode {
+                    0 => item.score_color.unwrap_or(item.color),
+                    1 => item.color,
+                    _ => 16777215,
+                };
                 danmu_list = format!("{}<d p=\"{},{},{},{},{},{},{},{},{}\">{}</d>", danmu_list, item.stime - begin, item.mode, item.size, color, item.timestamp, item.pool, item.user_id, item.dbid, item.mask, item.content);
             }
 
@@ -501,6 +507,14 @@ mod models {
     pub struct GetM3u8PlaylistOptions {
         pub begin: Option<DateTime<Utc>>,
         pub end: Option<DateTime<Utc>>,
+    }
+
+    // The query parameters for get_danmu.
+    #[derive(Debug, Deserialize)]
+    pub struct GetDanmuOptions {
+        pub begin: Option<DateTime<Utc>>,
+        pub end: Option<DateTime<Utc>>,
+        pub mode: Option<u64>,
     }
 
     #[derive(Debug, Deserialize, Serialize, Clone)]
