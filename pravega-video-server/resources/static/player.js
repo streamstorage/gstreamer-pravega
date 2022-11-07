@@ -50,6 +50,7 @@ function load_video() {
         plugins: [
             artplayerPluginDanmuku({
                 danmuku: danmuUri,
+                fontSize: '2%',
                 //mount: document.querySelector('.noshow')
             }),
         ],

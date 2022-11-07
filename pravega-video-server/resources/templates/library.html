@@ -34,9 +34,9 @@ You may obtain a copy of the License at
                 <td>{{ loop.index }}</td>
                 <td>{{ video.category }}</td>
                 <td>{{ video.title }}</td>
-                <td><a target="_blank" href="{{"/player?scope={}&stream={}&begin={}Z&end={}Z"|format(video.scope, video.stream, video.start_time|myfilter, video.end_time|myfilter)}}">with danmu after sentiment</a></td>
-                <td><a target="_blank" href="{{"/player?scope={}&stream={}&begin={}Z&end={}Z&mode=1"|format(video.scope, video.stream, video.start_time|myfilter, video.end_time|myfilter)}}">with original danmu</a></td>
-                <td><a target="_blank" href="{{"/player?scope={}&stream={}&begin={}Z&end={}Z&mode=2"|format(video.scope, video.stream, video.start_time|myfilter, video.end_time|myfilter)}}">with danmu in white</a></td>
+                <td><a target="_blank" href="{{"/player?scope={}&stream={}&begin={}Z&end={}Z"|format(video.scope, video.stream, video.start_time|myfilter, video.end_time|myfilter)}}">with danmaku after sentiment</a></td>
+                <td><a target="_blank" href="{{"/player?scope={}&stream={}&begin={}Z&end={}Z&mode=1"|format(video.scope, video.stream, video.start_time|myfilter, video.end_time|myfilter)}}">with original danmaku</a></td>
+                <td><a target="_blank" href="{{"/player?scope={}&stream={}&begin={}Z&end={}Z&mode=2"|format(video.scope, video.stream, video.start_time|myfilter, video.end_time|myfilter)}}">with danmaku in white</a></td>
             <?tr>
             {% endfor %}
         </table>
