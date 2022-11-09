@@ -47,6 +47,19 @@ function load_video() {
                 }
             },
         },
+        layers: [
+            {
+                name: 'title',
+                html: '<span>' + scope + "/" + stream + '<br />' + begin + '<br />~ ' + end + '</span>',
+                style: {
+                    position: 'absolute',
+                    top: '15px',
+                    right: '15px',
+                    display: 'none',
+                    'text-align': 'right',
+                },
+            },
+        ],
         plugins: [
             artplayerPluginDanmuku({
                 danmuku: danmuUri,
@@ -55,7 +68,13 @@ function load_video() {
             }),
         ],
     });
-
+    art.on('pause', () => {
+        art.layers.title.style.display = 'block';
+    });
+    
+    art.on('play', () => {
+        art.layers.title.style.display = 'none';
+    });
 }
 
 load_video();

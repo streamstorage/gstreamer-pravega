@@ -20,10 +20,13 @@ python danmu-loader.py --danmu-file --video-id 1
 python ./hackathon/danmu-loader.py --danmu-file "/home/luis/Downloads/bilibili/猫 妈 妈 和 小 奶 猫.xml" --video-id 2
 
 # run video server
+PRAVEGA_CONTROLLER_URI=10.247.97.51:9090 POSTGRES_URI=postgres://admin:password@10.247.97.51:5432/hackathon ./scripts/pravega-video-server.sh
+
 cd pravega-video-server && cargo build --release && tar -zcvf pravega-video-server.tar.gz ../target/release/pravega-video-server resources && scp pravega-video-server.tar.gz luis@node2:/home/luis/video-server
 cd video-server && rm nohup.out resources/ target/ -rf && tar -zxvf pravega-video-server.tar.gz && sudo systemctl restart pravega-video-server.service
 
-PRAVEGA_CONTROLLER_URI=10.247.97.51:9090 POSTGRES_URI=postgres://admin:password@10.247.97.51:5432/hackathon ./scripts/pravega-video-server.sh
+./hackathon/pravega-video-server-image-builder.sh
+helm upgrade --install --recreate-pods video-server ./hackathon/charts/video-server -n hackathon
 
 ## env
 postgresql: 10.247.97.51:5432 user/pass: admin/password
