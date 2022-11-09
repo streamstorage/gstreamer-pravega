@@ -9,13 +9,15 @@ PRAVEGA_CONTROLLER=10.247.97.51:9090 ./scripts/videotestsrc-to-pravega-hls.sh
 https://github.com/nilaoda/BBDown
 ./bbdown BV1DL4y1w7Gy -tv -dd
 
-
 VIDEO_FILE="/home/luis/Downloads/bilibili/猫妈妈和小奶猫.mp4" PRAVEGA_STREAM=BV1xA411v7jA PRAVEGA_CONTROLLER=10.247.97.51:9090 ./scripts/file-to-pravega.sh
-
 VIDEO_FILE=/home/luis/Downloads/bbdown/这小家伙能干翻长颈鹿？？？.mp4 PRAVEGA_STREAM=BV1hV4y157XN ./scripts/file-to-pravega.sh
+pravega_client_auth_method=Bearer KEYCLOAK_SERVICE_ACCOUNT_FILE=/home/luis/projects/nautilus-gstreamer/gstreamer-pravega/hackathon/hackathon.keycloak.json pravega_client_tls_cert_path=/home/luis/projects/nautilus-gstreamer/gstreamer-pravega/hackathon/tba.crt ALLOW_CREATE_SCOPE=false PRAVEGA_SCOPE=hackathon PRAVEGA_STREAM=BV1xA411v7jA PRAVEGA_CONTROLLER=tls://pravega-controller.tba.nautilus-platform-dev.com:443 VIDEO_FILE="/home/luis/Downloads/bilibili/猫妈妈和小奶猫.mp4" ./scripts/file-to-pravega.sh
 
 PRAVEGA_SCOPE=bilibili PRAVEGA_STREAM=BV1xA411v7jA ./scripts/pravega-table-updater.sh
+pravega_client_auth_method=Bearer KEYCLOAK_SERVICE_ACCOUNT_FILE=/home/luis/projects/nautilus-gstreamer/gstreamer-pravega/hackathon/hackathon.keycloak.json pravega_client_tls_cert_path=/home/luis/projects/nautilus-gstreamer/gstreamer-pravega/hackathon/tba.crt PRAVEGA_SCOPE=hackathon PRAVEGA_STREAM=BV1xA411v7jA PRAVEGA_CONTROLLER_URI=tls://pravega-controller.tba.nautilus-platform-dev.com:443 ./scripts/pravega-table-updater.sh
+
 python danmu-loader.py --danmu-file --video-id 1
+python ./hackathon/danmu-loader.py --danmu-file "/home/luis/Downloads/bilibili/猫 妈 妈 和 小 奶 猫.xml" --video-id 2
 
 # run video server
 cd pravega-video-server && cargo build --release && tar -zcvf pravega-video-server.tar.gz ../target/release/pravega-video-server resources && scp pravega-video-server.tar.gz luis@node2:/home/luis/video-server
@@ -39,4 +41,3 @@ USE_NEW_NVSTREAMMUX=yes  gst-launch-1.0 uridecodebin3 uri=$input1 name=demux1 ! 
 
 http://127.0.0.1:3030/player?scope=bilibili&stream=BV1hV4y157XN&begin=2022-10-30T05:55:47Z&end=2022-10-30T06:00:37Z
 http://127.0.0.1:3030/player?scope=bilibili&stream=BV1hV4y157XN&begin=2022-10-30T05:55:57Z&end=2022-10-30T05:56:07Z
-

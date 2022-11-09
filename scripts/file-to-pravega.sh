@@ -19,7 +19,9 @@ export GST_PLUGIN_PATH=${ROOT_DIR}/target/debug:${GST_PLUGIN_PATH}
 # log level can be INFO, DEBUG, or LOG (verbose)
 export GST_DEBUG=pravegasink:DEBUG,basesink:INFO
 export RUST_BACKTRACE=1
+PRAVEGA_SCOPE=${PRAVEGA_SCOPE:-bilibili}
 PRAVEGA_STREAM=${PRAVEGA_STREAM:-hls1}
+ALLOW_CREATE_SCOPE=${ALLOW_CREATE_SCOPE:-true}
 PRAVEGA_CONTROLLER=${PRAVEGA_CONTROLLER:-127.0.0.1:9090}
 VIDEO_FILE=${VIDEO_FILE:-/file/path/name.mp4}
 FPS=25
@@ -36,4 +38,9 @@ filesrc location=${VIDEO_FILE} \
 ! x264enc key-int-max=${KEY_FRAME_INTERVAL} tune=zerolatency speed-preset=medium \
 ! queue \
 ! mpegtsmux alignment=-1 \
-! pravegasink stream=bilibili/${PRAVEGA_STREAM} controller=${PRAVEGA_CONTROLLER} seal=false sync=false timestamp-mode=realtime-clock
+! pravegasink \
+  stream=${PRAVEGA_SCOPE}/${PRAVEGA_STREAM} \
+  allow-create-scope=${ALLOW_CREATE_SCOPE} \
+  controller=${PRAVEGA_CONTROLLER} \
+  keycloak-file=\"${KEYCLOAK_SERVICE_ACCOUNT_FILE}\" \
+  seal=false sync=false timestamp-mode=realtime-clock

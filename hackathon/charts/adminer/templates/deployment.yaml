@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: adminer
+  labels:
+    release: adminer
+spec:
+  selector:
+    matchLabels:
+      release: adminer
+  template:
+    metadata:
+      labels:
+        release: adminer
+    spec:
+      containers:
+      - name: adminer
+        image: registry.appdev.fun/adminer
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+          name: http-web-svc

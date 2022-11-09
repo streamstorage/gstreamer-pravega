@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pravega-video-server
+  labels:
+    release: pravega-video-server
+spec:
+  selector:
+    matchLabels:
+      release: pravega-video-server
+  template:
+    metadata:
+      annotations:
+        nautilus.dellemc.com/pravega-environment: "{{ .Release.Namespace }}-pravega"
+      labels:
+        release: pravega-video-server
+    spec:
+      containers:
+      - name: pravega-video-server
+        image: registry.appdev.fun/pravega-video-server
+        imagePullPolicy: Always
+        env:
+        - name: POSTGRES_URI
+          value: "{{ .Values.postgresUri }}"
+        - name: pravega_client_tls_cert_path
+          value: "/etc/ssl/certs/ca-certificates.crt"
+        ports:
+        - containerPort: 3030
+          name: http-web-svc

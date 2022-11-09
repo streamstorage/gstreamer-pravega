@@ -1,0 +1,2 @@
+{"realm":"nautilus","auth-server-url":"https://keycloak.tba.nautilus-platform-dev.com/auth","ssl-required":"none","bearer-only":false,"public-client":false,"resource":"hackathon-pravega",
+"confidential-port":0,"credentials":{"secret":"Bv9Ruj2YPLPx6P1X3XxM8P7Xma52slSf"}}
