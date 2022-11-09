@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana
+  annotations:
+    nautilus.dellemc.com/http-ingress: http
+    nautilus.dellemc.com/http-ingress-name: grafana
+spec:
+  ports:
+  - name: http
+    protocol: TCP
+    port: 80
+    targetPort: http-web-svc
+  selector:
+    release: grafana
+  type: ClusterIP

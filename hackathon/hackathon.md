@@ -28,6 +28,9 @@ cd video-server && rm nohup.out resources/ target/ -rf && tar -zxvf pravega-vide
 ./hackathon/pravega-video-server-image-builder.sh
 helm upgrade --install --recreate-pods video-server ./hackathon/charts/video-server -n hackathon
 
+# run grafana
+helm upgrade --install --recreate-pods grafana ./hackathon/charts/grafana -n hackathon
+
 ## env
 postgresql: 10.247.97.51:5432 user/pass: admin/password
 postgresql admin portal: http://10.247.97.51:8080/

@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+  labels:
+    release: grafana
+spec:
+  selector:
+    matchLabels:
+      release: grafana
+  template:
+    metadata:
+      labels:
+        release: grafana
+    spec:
+      containers:
+      - name: grafana
+        image: registry.appdev.fun/grafana
+        imagePullPolicy: Always
+        env:
+        - name: GF_DEFAULT_APP_MODE
+          value: development
+        ports:
+        - containerPort: 3000
+          name: http-web-svc
+        volumeMounts:
+        - mountPath: /var/lib/grafana
+          name: grafana-volume
+      volumes:
+      - name: grafana-volume
+        persistentVolumeClaim:
+          claimName: grafana-hackathon-volume
