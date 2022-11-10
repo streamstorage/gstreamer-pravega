@@ -17,9 +17,6 @@ spec:
       - name: grafana
         image: registry.appdev.fun/grafana
         imagePullPolicy: Always
-        env:
-        - name: GF_DEFAULT_APP_MODE
-          value: development
         ports:
         - containerPort: 3000
           name: http-web-svc

@@ -1,0 +1,16 @@
+version: '3.0'
+
+services:
+  grafana:
+    container_name: 'pravega-video-player'
+    build:
+      context: ./.config
+      args:
+        grafana_version: ${GRAFANA_VERSION:-9.1.2}
+    #environment:
+    #  - GF_INSTALL_PLUGINS=pravega-video-player
+    ports:
+      - 3000:3000/tcp
+    volumes:
+      - ./dist:/var/lib/grafana/plugins/pravega-video-player,
+      - ./provisioning:/etc/grafana/provisioning

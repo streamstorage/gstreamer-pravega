@@ -17,7 +17,6 @@
 *.nfs*
 *.pem
 *.tgz
-*.ts
 !/pravega-video-server/resources/static/*.ts
 !/pravega-video-server/resources/static/*.mp4
 __pycache__/
