@@ -795,9 +795,9 @@ mod models {
 
                     // Write ENDLIST if we have all data up to the requested end time.
                     // This will prevent the browser from polling for updated playlists.
-                    if have_all_data {
+                    //if have_all_data {
                         playlist.push_str("#EXT-X-ENDLIST\n");
-                    }
+                    //}
                     info!("END");
                     Ok(playlist)
                 })
