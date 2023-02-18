@@ -34,13 +34,14 @@ filesrc location=${VIDEO_FILE} \
 ! h264parse \
 ! avdec_h264 \
 ! videoconvert \
-! queue \
 ! x264enc key-int-max=${KEY_FRAME_INTERVAL} tune=zerolatency speed-preset=medium \
 ! queue \
-! mpegtsmux alignment=-1 \
+! timestampcvt input-timestamp-mode=start-at-current-time \
+! mp4mux streamable=true fragment-duration=1 \
+! fragmp4pay \
 ! pravegasink \
   stream=${PRAVEGA_SCOPE}/${PRAVEGA_STREAM} \
   allow-create-scope=${ALLOW_CREATE_SCOPE} \
   controller=${PRAVEGA_CONTROLLER} \
   keycloak-file=\"${KEYCLOAK_SERVICE_ACCOUNT_FILE}\" \
-  seal=false sync=false timestamp-mode=realtime-clock
+  seal=false sync=false timestamp-mode=tai

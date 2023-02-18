@@ -25,7 +25,7 @@ PRAVEGA_STREAM=${PRAVEGA_STREAM:-test2}
 gst-launch-1.0 \
 -v \
 pravegasrc stream=examples/${PRAVEGA_STREAM} \
-! tsdemux \
+! qtdemux \
 ! h264parse \
 ! avdec_h264 \
 ! videoconvert \
