@@ -7,41 +7,23 @@ You may obtain a copy of the License at
 
     http://www.apache.org/licenses/LICENSE-2.0
 -->
-# Docker Containers for GStreamer
+# Docker Containers for GStreamer Pravega
 
 ## Overview
 
-This builds container images with GStreamer and plugins pre-installed. This can be used for GStreamer applications that do not use DeepStream.
+This builds ubuntu-based container images with latest GStreamer and gstreamer-pravega plugin.
 
-The following components are included:
-
-- GStreamer
-- gst-plugin-pravega
-- pravega-video-server
-- rtsp-camera-simulator
-- gst-plugins-base
-- gst-plugins-good
-- gst-plugins-bad
-- gst-plugins-ugly
-- gst-libav
-- gst-rtsp-server
-- libnice
-- Ubuntu 20.10
-
-This is based on [https://github.com/restreamio/docker-gstreamer](https://github.com/restreamio/docker-gstreamer/tree/6cf16dc77f5d5928abecacf5005e49a3fbccf918).
+GStreamer build is from [https://github.com/streamstorage/docker-gstreamer](https://github.com/streamstorage/docker-gstreamer/tree/22.04-1.22.5).
 
 ## Image Types
 
-There are 4 kinds of images that are built.
+There are 2 kinds of images that are built.
 
-- pravega/gstreamer:latest-dev-with-source - includes unoptimized build with debug symbols and even source code it was built with
-- pravega/gstreamer:latest-dev - same as above, but without source code for development purposes
-- pravega/gstreamer:latest-prod - optimized (`-O3` and `LTO`) build without debug symbols for production purposes
-- pravega/gstreamer:latest-prod-dbg - optimized (`-O2` only) build with debug symbols included for production purposes with better debugging experience
-- pravega/gstreamer:pravega-dev - same as latest-dev-with-source, with gstreamer-pravega source code, libraries, and applications
+- streamstorage/pravega-gstreamer:latest-dev - with streamstorage/gstreamer:22.04-1.22.5-dev and gstreamer-pravega source code, libraries, and applications
+- streamstorage/pravega-gstreamer:latest-prod - with streamstorage/gstreamer:22.04-1.22.5-prod and gstreamer-pravega libraries, and applications
 
 ## Build Procedure
 
 ```bash
-./build-release.sh
+BUILD_PROD=1 ./build-release.sh
 ```
