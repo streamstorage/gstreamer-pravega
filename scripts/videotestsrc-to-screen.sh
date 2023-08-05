@@ -11,14 +11,6 @@
 #
 
 set -ex
-ROOT_DIR=$(readlink -f $(dirname $0)/..)
-pushd ${ROOT_DIR}/gst-plugin-pravega
-cargo build
-ls -lh ${ROOT_DIR}/target/debug/*.so
-export GST_PLUGIN_PATH=${ROOT_DIR}/target/debug:${GST_PLUGIN_PATH}
-export GST_DEBUG=pravegasink:5
-export RUST_BACKTRACE=1
-PRAVEGA_STREAM=${PRAVEGA_STREAM:-test1}
 SIZE_SEC=1000
 FPS=30
 
